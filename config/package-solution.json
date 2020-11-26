@@ -3,7 +3,7 @@
   "solution": {
     "name": "corporate-library-client-side-solution",
     "id": "dee3cd6f-ead8-4456-a694-61df91cfe146",
-    "version": "1.0.0.1",
+    "version": "1.0.0.3",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
