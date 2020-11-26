@@ -27,10 +27,10 @@ export class AILogListener implements ILogListener {
      * @param {string} webpartName Webpart Name
      * @param {string} webpartversion Webpart Version
      */
-    constructor(instrumentationKey: string, currentUser: string, webpartName: string, webpartversion: string = "1.0.0.0") {
+    constructor(instrumentationKey: string, currentUser: string, webpartName: string, webpartVersion: string = "1.0.0.0") {
         AILogListener._instrumentationKey = instrumentationKey;
         AILogListener._webpartName = webpartName;
-        AILogListener._webpartVersion = webpartversion;
+        AILogListener._webpartVersion = webpartVersion;
 
         this._constants = new Constants(AILogListener._webpartName);
 

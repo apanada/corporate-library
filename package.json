@@ -14,7 +14,9 @@
   "dependencies": {
     "@microsoft/applicationinsights-react-js": "^3.0.5",
     "@microsoft/applicationinsights-web": "^2.5.10",
+    "@pnp/common": "^2.0.12",
     "@pnp/logging": "^2.0.12",
+    "@pnp/odata": "^2.0.12",
     "jssha": "^3.1.2",
     "read-appsettings-json": "^1.0.98"
   },

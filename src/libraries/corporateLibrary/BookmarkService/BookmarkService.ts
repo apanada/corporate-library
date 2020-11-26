@@ -5,6 +5,10 @@ import { IBookmarkService } from "./IBookmarkService";
 import { IAADClientService } from "../AADClientService/IAADClientService";
 import { AADClientService } from "../AADClientService/AADClientService";
 import { AppConfiguration } from "read-appsettings-json";
+import { Logger, LogLevel } from "@pnp/logging";
+import { AILogListener } from "../AILogListener/AILogListener";
+import { IExceptionService } from "../ExceptionService/IExceptionService";
+import { ExceptionService } from "../ExceptionService/ExceptionService";
 
 /**
  * BookmarkService class
@@ -13,6 +17,7 @@ import { AppConfiguration } from "read-appsettings-json";
 export class BookmarkService implements IBookmarkService {
     private readonly context: WebPartContext = undefined;
     private bookmarksClient: AadHttpClient = undefined;
+    private exceptionService: IExceptionService;
 
     /**
      * BookmarkService constructor
@@ -22,15 +27,32 @@ export class BookmarkService implements IBookmarkService {
     constructor(context: WebPartContext) {
         this.context = context;
 
+        Logger.activeLogLevel = LogLevel.Info;
+        Logger.subscribe(
+            new AILogListener(
+                AppConfiguration.Setting().ApplicationInsightsInstrumentationKey,
+                this.context.pageContext.user.email,
+                "ManageBookmarks"
+            )
+        );
+
+        this.exceptionService = new ExceptionService(this.context.pageContext.user.email);
+
         let aadClientService: IAADClientService = new AADClientService(this.context);
         aadClientService.GetAADClient(AppConfiguration.Setting().AzureAdAppCliendId)
             .then(
                 (client: AadHttpClient): void => {
                     this.bookmarksClient = client;
                 },
-                (err) => console.log(err)
+                (err) => {
+                    Logger.write("Exception ocurred in getting AadHttpClient instance", LogLevel.Error);
+                    this.exceptionService.LogException(err);
+                }
             )
-            .catch((err) => console.log(err));
+            .catch((err) => {
+                Logger.write("Exception ocurred in getting AadHttpClient instance", LogLevel.Error);
+                this.exceptionService.LogException(err);
+            });
     }
 
     /**
@@ -40,18 +62,24 @@ export class BookmarkService implements IBookmarkService {
     public GetBookmarks = async (): Promise<Bookmark[]> => {
         const apiUrl: string = `${AppConfiguration.Setting().ApiBaseUrl}/api/GetBookmarks?code=KLofLip41yhwRGLh52q9sabeoi7nJxpKVZ9Ds3OSQwtWJFPaV5mqyw==`;
 
-        // Get the response
-        const response: HttpClientResponse = await this.bookmarksClient
-            .get(apiUrl, AadHttpClient.configurations.v1);
+        try {
+            // Get the response
+            const response: HttpClientResponse = await this.bookmarksClient
+                .get(apiUrl, AadHttpClient.configurations.v1);
 
-        if (response.ok) {
-            // Read the value from the JSON
-            const bookmarks: any = await response.json();
+            if (response.ok) {
+                // Read the value from the JSON
+                const bookmarks: any = await response.json();
 
-            // Return the value
-            return bookmarks.map(
-                (bookmark: any) => ({ Id: bookmark.id, Url: bookmark.url })
-            );
+                // Return the value
+                return bookmarks.map(
+                    (bookmark: any) => ({ Id: bookmark.id, Url: bookmark.url })
+                );
+            }
+        }
+        catch (err) {
+            Logger.write("Exception ocurred in calling GetBookmarks function", LogLevel.Error);
+            this.exceptionService.LogException(err);
         }
 
         return [] as Bookmark[];
@@ -65,16 +93,22 @@ export class BookmarkService implements IBookmarkService {
     public GetBookmarksById = async (id: string): Promise<Bookmark> => {
         const apiUrl: string = `${AppConfiguration.Setting().ApiBaseUrl}/api/GetBookmarks/${id}?code=4anZC7EuJ4NCIZS4BNDSazGFaBpDHTFkYTcQZvMQHFfagsfsqan2kA==`;
 
-        // Get the response
-        const response: HttpClientResponse = await this.bookmarksClient
-            .get(apiUrl, AadHttpClient.configurations.v1);
+        try {
+            // Get the response
+            const response: HttpClientResponse = await this.bookmarksClient
+                .get(apiUrl, AadHttpClient.configurations.v1);
 
-        if (response.ok) {
-            // Read the value from the JSON
-            const bookmark: any = await response.json();
+            if (response.ok) {
+                // Read the value from the JSON
+                const bookmark: any = await response.json();
 
-            // Return the value
-            return <Bookmark>{ Id: bookmark.id, Url: bookmark.url };
+                // Return the value
+                return <Bookmark>{ Id: bookmark.id, Url: bookmark.url };
+            }
+        }
+        catch (err) {
+            Logger.write(`Exception ocurred in calling GetBookmarksById function with Id: ${id}`, LogLevel.Error);
+            this.exceptionService.LogException(err);
         }
 
         return undefined as Bookmark;
@@ -88,32 +122,38 @@ export class BookmarkService implements IBookmarkService {
     public AddBookmark = async (bookmark: Bookmark): Promise<string> => {
         const apiUrl: string = `${AppConfiguration.Setting().ApiBaseUrl}/api/AddBookmark?code=LoHqdQaRLf2mlYjf4L81jf1l4gwrnMkOivr6IrJs5Wi3Qs82GoOadw==`;
 
-        // Setup the options with header and body
-        const headers: Headers = new Headers({
-            'Content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Accept': 'application/json'
-        });
+        try {
+            // Setup the options with header and body
+            const headers: Headers = new Headers({
+                'Content-type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Accept': 'application/json'
+            });
 
-        const newBookmark: any = {
-            id: bookmark.Id,
-            url: bookmark.Url
-        };
+            const newBookmark: any = {
+                id: bookmark.Id,
+                url: bookmark.Url
+            };
 
-        const postOptions: IHttpClientOptions = {
-            headers: headers,
-            body: JSON.stringify(newBookmark)
-        };
+            const postOptions: IHttpClientOptions = {
+                headers: headers,
+                body: JSON.stringify(newBookmark)
+            };
 
-        // Get the response
-        const response: any = await this.bookmarksClient
-            .post(apiUrl, AadHttpClient.configurations.v1, postOptions);
+            // Get the response
+            const response: any = await this.bookmarksClient
+                .post(apiUrl, AadHttpClient.configurations.v1, postOptions);
 
-        if (response.ok) {
-            // Read the value from the response
-            const responseText: string = await response.text();
+            if (response.ok) {
+                // Read the value from the response
+                const responseText: string = await response.text();
 
-            return responseText;
+                return responseText;
+            }
+        }
+        catch (err) {
+            Logger.write(`Exception ocurred in calling AddBookmark function with Bookmark: ${JSON.stringify(bookmark)}`, LogLevel.Error);
+            this.exceptionService.LogException(err);
         }
 
         return undefined as string;
