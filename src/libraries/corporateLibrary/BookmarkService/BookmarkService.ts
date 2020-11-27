@@ -5,7 +5,7 @@ import { IBookmarkService } from "./IBookmarkService";
 import { IAADClientService } from "../AADClientService/IAADClientService";
 import { AADClientService } from "../AADClientService/AADClientService";
 import { AppConfiguration } from "read-appsettings-json";
-import { Logger, LogLevel } from "@pnp/logging";
+import { ILogListener, Logger, LogLevel } from "@pnp/logging";
 import { AILogListener } from "../AILogListener/AILogListener";
 import { IExceptionService } from "../ExceptionService/IExceptionService";
 import { ExceptionService } from "../ExceptionService/ExceptionService";
@@ -27,16 +27,15 @@ export class BookmarkService implements IBookmarkService {
     constructor(context: WebPartContext) {
         this.context = context;
 
-        Logger.activeLogLevel = LogLevel.Info;
-        Logger.subscribe(
-            new AILogListener(
-                AppConfiguration.Setting().ApplicationInsightsInstrumentationKey,
-                this.context.pageContext.user.email,
-                "ManageBookmarks"
-            )
+        const aiLogListener: ILogListener = new AILogListener(
+            AppConfiguration.Setting().ApplicationInsightsInstrumentationKey,
+            this.context.pageContext.user.email,
+            "ManageBookmarks", "1.0.0.0"
         );
+        Logger.activeLogLevel = LogLevel.Info;
+        Logger.subscribe(aiLogListener);
 
-        this.exceptionService = new ExceptionService(this.context.pageContext.user.email);
+        this.exceptionService = new ExceptionService(aiLogListener);
 
         let aadClientService: IAADClientService = new AADClientService(this.context);
         aadClientService.GetAADClient(AppConfiguration.Setting().AzureAdAppCliendId)

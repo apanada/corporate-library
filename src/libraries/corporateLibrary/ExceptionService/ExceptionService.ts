@@ -1,21 +1,12 @@
 import { hOP } from "@pnp/common";
-import { Logger, LogLevel } from "@pnp/logging";
+import { ILogListener, Logger, LogLevel } from "@pnp/logging";
 import { HttpRequestError } from "@pnp/odata";
-import { AppConfiguration } from "read-appsettings-json";
-import { AILogListener } from "../AILogListener/AILogListener";
 import { IExceptionService } from "./IExceptionService";
 
 export class ExceptionService implements IExceptionService {
-
-    constructor(currentUser: string) {
+    constructor(aiLogListener: ILogListener) {
         Logger.activeLogLevel = LogLevel.Info;
-        Logger.subscribe(
-            new AILogListener(
-                AppConfiguration.Setting().ApplicationInsightsInstrumentationKey,
-                currentUser,
-                "ManageBookmarks"
-            )
-        );
+        Logger.subscribe(aiLogListener);
     }
 
     public LogException = async (ex: Error | HttpRequestError): Promise<void> => {
