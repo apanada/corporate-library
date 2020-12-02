@@ -31,10 +31,9 @@ jobs:
 
       #reference library component type using `npm link`
       - task: Npm@1
-        displayName: "npm install"
+        displayName: "npm link"
         inputs:
           command: "custom"
-          workingDir: "$(Build.DefaultWorkingDirectory)"
           customCommand: "link"
           verbose: false
 
