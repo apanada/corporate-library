@@ -29,13 +29,12 @@ jobs:
       - script: npm ci
         displayName: "npm ci"
 
-      #reference library component type using `npm link`
+      #publish to an Azure Artifacts feed
       - task: Npm@1
-        displayName: "npm link"
         inputs:
-          command: "custom"
-          customCommand: "link"
-          verbose: false
+          command: publish
+          publishRegistry: useFeed
+          publishFeed: "SharePoint DevOps/libraries"
 
       #bundle code with gulp
       - task: Gulp@0

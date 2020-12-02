@@ -1,6 +1,6 @@
 {
-  "name": "corporate-library",
-  "version": "0.0.1",
+  "name": "spfx-corporate-library",
+  "version": "0.0.2",
   "private": false,
   "main": "lib/index.js",
   "engines": {
