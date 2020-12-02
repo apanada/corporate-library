@@ -16,13 +16,9 @@
     "noUnusedLocals": false,
     "typeRoots": ["./node_modules/@types", "./node_modules/@microsoft"],
     "types": ["es6-promise", "webpack-env"],
-    "lib": ["es5", "dom", "es2015.collection"]
+    "lib": ["es5", "dom", "es2015.collection"],
+    "resolveJsonModule": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": [
-    "node_modules",
-    "lib",
-    "**/appsettings.json",
-    "**/appsettings.Development.json"
-  ]
+  "exclude": ["node_modules", "lib"]
 }

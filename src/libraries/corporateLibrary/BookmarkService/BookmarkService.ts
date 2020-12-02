@@ -1,14 +1,16 @@
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 import { AadHttpClient, IHttpClientOptions, HttpClientResponse } from '@microsoft/sp-http';
+import { ILogListener, Logger, LogLevel } from "@pnp/logging";
+
+import { AILogListener } from "../AILogListener/AILogListener";
+import { IExceptionService } from "../ExceptionService/IExceptionService";
+import { ExceptionService } from "../ExceptionService/ExceptionService";
 import { Bookmark } from "../models/Bookmark";
 import { IBookmarkService } from "./IBookmarkService";
 import { IAADClientService } from "../AADClientService/IAADClientService";
 import { AADClientService } from "../AADClientService/AADClientService";
-import { AppConfiguration } from "read-appsettings-json";
-import { ILogListener, Logger, LogLevel } from "@pnp/logging";
-import { AILogListener } from "../AILogListener/AILogListener";
-import { IExceptionService } from "../ExceptionService/IExceptionService";
-import { ExceptionService } from "../ExceptionService/ExceptionService";
+
+import * as AppConfiguration from "../../../config.json";
 
 /**
  * BookmarkService class
@@ -28,7 +30,7 @@ export class BookmarkService implements IBookmarkService {
         this.context = context;
 
         const aiLogListener: ILogListener = new AILogListener(
-            AppConfiguration.Setting().ApplicationInsightsInstrumentationKey,
+            AppConfiguration.ApplicationInsightsInstrumentationKey,
             this.context.pageContext.user.email,
             "ManageBookmarks", "1.0.0.0"
         );
@@ -38,7 +40,7 @@ export class BookmarkService implements IBookmarkService {
         this.exceptionService = new ExceptionService(aiLogListener);
 
         let aadClientService: IAADClientService = new AADClientService(this.context);
-        aadClientService.GetAADClient(AppConfiguration.Setting().AzureAdAppCliendId)
+        aadClientService.GetAADClient(AppConfiguration.AzureAdAppCliendId)
             .then(
                 (client: AadHttpClient): void => {
                     this.bookmarksClient = client;
@@ -60,7 +62,7 @@ export class BookmarkService implements IBookmarkService {
      * @returns {Promise<Bookmark[]>} Bookmark[] - Returns list of all bookmarks
      */
     public GetBookmarks = async (): Promise<Bookmark[]> => {
-        const apiUrl: string = `${AppConfiguration.Setting().ApiBaseUrl}/api/GetBookmarks?code=KLofLip41yhwRGLh52q9sabeoi7nJxpKVZ9Ds3OSQwtWJFPaV5mqyw==`;
+        const apiUrl: string = `${AppConfiguration.ApiBaseUrl}/api/GetBookmarks?code=KLofLip41yhwRGLh52q9sabeoi7nJxpKVZ9Ds3OSQwtWJFPaV5mqyw==`;
 
         try {
             Logger.write(`Calling GetBookmarks api for apiUrl: ${apiUrl}`, LogLevel.Info);
@@ -95,7 +97,7 @@ export class BookmarkService implements IBookmarkService {
      * @returns {Promise<Bookmark>} Bookmark - Returns the bookmark for the specific id
      */
     public GetBookmarksById = async (id: string): Promise<Bookmark> => {
-        const apiUrl: string = `${AppConfiguration.Setting().ApiBaseUrl}/api/GetBookmarks/${id}?code=4anZC7EuJ4NCIZS4BNDSazGFaBpDHTFkYTcQZvMQHFfagsfsqan2kA==`;
+        const apiUrl: string = `${AppConfiguration.ApiBaseUrl}/api/GetBookmarks/${id}?code=4anZC7EuJ4NCIZS4BNDSazGFaBpDHTFkYTcQZvMQHFfagsfsqan2kA==`;
 
         try {
             Logger.write(`Calling GetBookmarksById api for apiUrl: ${apiUrl}`, LogLevel.Info);
@@ -128,7 +130,7 @@ export class BookmarkService implements IBookmarkService {
      * @returns {Promise<string>} string - Returns response string message
      */
     public AddBookmark = async (bookmark: Bookmark): Promise<string> => {
-        const apiUrl: string = `${AppConfiguration.Setting().ApiBaseUrl}/api/AddBookmark?code=LoHqdQaRLf2mlYjf4L81jf1l4gwrnMkOivr6IrJs5Wi3Qs82GoOadw==`;
+        const apiUrl: string = `${AppConfiguration.ApiBaseUrl}/api/AddBookmark?code=LoHqdQaRLf2mlYjf4L81jf1l4gwrnMkOivr6IrJs5Wi3Qs82GoOadw==`;
 
         try {
             Logger.write(`Calling AddBookmark api for apiUrl: ${apiUrl}`, LogLevel.Info);

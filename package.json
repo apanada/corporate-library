@@ -1,6 +1,6 @@
 {
   "name": "spfx-corporate-library",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": false,
   "main": "lib/index.js",
   "engines": {
@@ -17,8 +17,7 @@
     "@pnp/common": "^2.0.12",
     "@pnp/logging": "^2.0.12",
     "@pnp/odata": "^2.0.12",
-    "jssha": "^3.1.2",
-    "read-appsettings-json": "^1.0.98"
+    "jssha": "^3.1.2"
   },
   "devDependencies": {
     "@microsoft/sp-build-web": "1.11.0",
