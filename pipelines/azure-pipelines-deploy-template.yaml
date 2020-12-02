@@ -1,0 +1,39 @@
+parameters:
+  # unique name of the job
+  job_name: deploy_sppkg
+  # friendly name of the job
+  display_name: Upload & deploy *.sppkg to SharePoint app catalog
+  # name of target environment deploying to
+  target_environment: ""
+  # app catalog scope (tenant|sitecollection)
+  m365cli_app_catalog_scope: "tenant"
+  variable_group_name: ""
+jobs:
+  - deployment: ${{ parameters.job_name }}
+    displayName: ${{ parameters.display_name }}
+    pool:
+      vmImage: "ubuntu-latest"
+    environment: ${{ parameters.target_environment }}
+    variables:
+      - group: ${{parameters.variable_group_name}} #m365_user_login, m365_user_password, m365_app_catalog_site_url
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: none
+            - download: current
+              artifact: drop
+              patterns: "**/*.sppkg"
+            - script: sudo npm install --global @pnp/cli-microsoft365
+              displayName: Install CLI for Microsoft365
+            - script: m365 login $(m365_app_catalog_site_url) --authType password --userName $(365_user_login) --password $(m365_user_password)
+              displayName: Login to Microsoft 365
+            - script: |
+                CMD_GET_SPPKG_NAME=$(find $(Pipeline.Workspace)/drop -name '*.sppkg' -exec basename {} \;)
+                echo "##vso[task.setvariable variable=SpPkgFileName;isOutput=true]${CMD_GET_SPPKG_NAME}"
+              displayName: Get generated *.sppkg filename
+              name: GetSharePointPackage
+            - script: m365 spo app add --filePath "$(Pipeline.Workspace)/drop/sharepoint/solution/$(GetSharePointPackage.SpPkgFileName)" --appCatalogUrl $(m365_app_catalog_site_url) --scope ${{ parameters.m365cli_app_catalog_scope }} --overwrite
+              displayName: Upload SharePoint package to Site Collection App Catalog
+            - script: m365 spo app deploy --name $(GetSharePointPackage.SpPkgFileName) --appCatalogUrl $(m365_app_catalog_site_url) --scope ${{ parameters.m365cli_app_catalog_scope }}
+              displayName: Deploy SharePoint package

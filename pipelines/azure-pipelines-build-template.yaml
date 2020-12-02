@@ -1,0 +1,80 @@
+parameters:
+  name: ""
+jobs:
+  - job: ${{ parameters.name }}
+    pool:
+      vmImage: "ubuntu-latest"
+      demands:
+        - npm
+        - node.js
+        - java
+    variables:
+      npm_config_cache: $(Pipeline.Workspace)/.npm
+
+    steps:
+      - checkout: self
+
+      #install node 10.x
+      - task: NodeTool@0
+        displayName: "Use Node 10.x"
+        inputs:
+          versionSpec: 10.x
+          checkLatest: true
+
+      - task: CacheBeta@1
+        inputs:
+          key: npm | $(Agent.OS) | npm-shrinkwrap.json
+          path: $(npm_config_cache)
+          cacheHitVar: CACHE_RESTORED
+      - script: npm ci
+        displayName: "npm ci"
+
+      #reference library component type using `npm link`
+      - task: Npm@1
+        displayName: "npm install"
+        inputs:
+          command: "custom"
+          workingDir: "$(Build.DefaultWorkingDirectory)"
+          customCommand: "link"
+          verbose: false
+
+      #bundle code with gulp
+      - task: Gulp@0
+        displayName: "Bundle project"
+        inputs:
+          targets: bundle
+          arguments: "--ship"
+
+      - script: npm test
+        displayName: "npm test"
+
+      - task: PublishTestResults@2
+        displayName: Publish test results
+        inputs:
+          testResultsFormat: JUnit
+          testResultsFiles: "**/junit.xml"
+
+      - task: PublishCodeCoverageResults@1
+        displayName: "Publish code coverage results"
+        inputs:
+          codeCoverageTool: Cobertura
+          summaryFileLocation: "$(System.DefaultWorkingDirectory)/**/*coverage.xml"
+
+      #package solution with gulp
+      - task: Gulp@0
+        displayName: "Package Solution"
+        inputs:
+          targets: "package-solution"
+          arguments: "--ship"
+
+      #copy files to artifact repository
+      - task: CopyFiles@2
+        displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
+        inputs:
+          Contents: |
+            sharepoint/**/*.sppkg
+          TargetFolder: "$(Build.ArtifactStagingDirectory)"
+
+      #publish artifacts
+      - task: PublishBuildArtifacts@1
+        displayName: "Publish Artifact: drop"

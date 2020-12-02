@@ -42,12 +42,7 @@ export class BookmarkService implements IBookmarkService {
             .then(
                 (client: AadHttpClient): void => {
                     this.bookmarksClient = client;
-                    Logger.log({
-                        message: "Created new instance of AadHttpClient in BookmarkService constructor",
-                        level: LogLevel.Info,
-                        data: this.bookmarksClient
-                    });
-                    Logger.writeJSON(this.bookmarksClient);
+                    Logger.write("Created new instance of AadHttpClient in BookmarkService constructor", LogLevel.Info);
                 },
                 (err) => {
                     Logger.write("Exception ocurred in getting AadHttpClient instance", LogLevel.Error);
