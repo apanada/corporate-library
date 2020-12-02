@@ -21,6 +21,13 @@ jobs:
           versionSpec: 10.x
           checkLatest: true
 
+      #publish to an Azure Artifacts feed
+      - task: Npm@1
+        inputs:
+          command: publish
+          publishRegistry: useFeed
+          publishFeed: "27ba9157-71a6-45a5-812c-832fd887b0e8/4f315247-bf0c-4226-9ee8-b290d88016ad"
+
       - task: CacheBeta@1
         inputs:
           key: npm | $(Agent.OS) | package-lock.json
@@ -28,13 +35,6 @@ jobs:
           cacheHitVar: CACHE_RESTORED
       - script: npm ci
         displayName: "npm ci"
-
-      #publish to an Azure Artifacts feed
-      - task: Npm@1
-        inputs:
-          command: publish
-          publishRegistry: useFeed
-          publishFeed: "SharePoint DevOps/libraries"
 
       #bundle code with gulp
       - task: Gulp@0
