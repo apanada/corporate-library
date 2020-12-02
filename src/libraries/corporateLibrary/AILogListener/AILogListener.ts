@@ -1,4 +1,4 @@
-import { LogLevel, ILogListener, ILogEntry } from "@pnp/logging";
+import { LogLevel, ILogListener, ILogEntry, Logger } from "@pnp/logging";
 import { ApplicationInsights, SeverityLevel } from '@microsoft/applicationinsights-web';
 import { ReactPlugin, withAITracking } from '@microsoft/applicationinsights-react-js';
 import { createBrowserHistory } from 'history';
@@ -46,32 +46,39 @@ export class AILogListener implements ILogListener {
      * @returns {ApplicationInsights} ApplicationInsights - ApplicationInsights Instance
      */
     private static initializeApplicationInsights = (currentUser?: string): ApplicationInsights => {
-        if (!AILogListener._instrumentationKey) {
-            throw new Error('Instrumentation key not provided');
+        try {
+            if (!AILogListener._instrumentationKey) {
+                throw new Error('Instrumentation key not provided');
+            }
+
+            const browserHistory = createBrowserHistory({ basename: '' });
+            AILogListener._reactPluginInstance = new ReactPlugin();
+            const appInsights = new ApplicationInsights({
+                config: {
+                    maxBatchInterval: 0,
+                    instrumentationKey: AILogListener._instrumentationKey,
+                    namePrefix: AILogListener._webpartName,             // Used as Postfix for cookie and localStorage 
+                    disableFetchTracking: false,                        // To avoid tracking on all fetch
+                    disableAjaxTracking: true,                          // Not to autocollect Ajax calls
+                    autoTrackPageVisitTime: true,
+                    extensions: [AILogListener._reactPluginInstance],
+                    extensionConfig: {
+                        [AILogListener._reactPluginInstance.identifier]: { history: browserHistory }
+                    }
+                }
+            });
+
+            appInsights.loadAppInsights();
+            appInsights.trackPageView();
+            appInsights.context.application.ver = AILogListener._webpartVersion;    // application_Version
+            appInsights.setAuthenticatedUserContext(_hashUser(currentUser));        // user_AuthenticateId
+            return appInsights;
+        }
+        catch (ex) {
+            console.error(ex);
         }
 
-        const browserHistory = createBrowserHistory({ basename: '' });
-        AILogListener._reactPluginInstance = new ReactPlugin();
-        const appInsights = new ApplicationInsights({
-            config: {
-                maxBatchInterval: 0,
-                instrumentationKey: AILogListener._instrumentationKey,
-                namePrefix: AILogListener._webpartName,             // Used as Postfix for cookie and localStorage 
-                disableFetchTracking: false,                        // To avoid tracking on all fetch
-                disableAjaxTracking: true,                          // Not to autocollect Ajax calls
-                autoTrackPageVisitTime: true,
-                extensions: [AILogListener._reactPluginInstance],
-                extensionConfig: {
-                    [AILogListener._reactPluginInstance.identifier]: { history: browserHistory }
-                }
-            }
-        });
-
-        appInsights.loadAppInsights();
-        appInsights.trackPageView();
-        appInsights.context.application.ver = AILogListener._webpartVersion;    // application_Version
-        appInsights.setAuthenticatedUserContext(_hashUser(currentUser));        // user_AuthenticateId
-        return appInsights;
+        return undefined;
     }
 
     /**
