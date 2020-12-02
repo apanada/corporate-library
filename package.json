@@ -33,5 +33,19 @@
     "ajv": "~5.2.2",
     "@types/webpack-env": "1.13.1",
     "@types/es6-promise": "0.0.33"
-  }
+  },
+  "description": "Short summary on functionality and used technologies.",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apanada/corporate-library.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/apanada/corporate-library/issues"
+  },
+  "homepage": "https://github.com/apanada/corporate-library#readme"
 }

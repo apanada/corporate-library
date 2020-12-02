@@ -21,13 +21,6 @@ jobs:
           versionSpec: 10.x
           checkLatest: true
 
-      #publish to an Azure Artifacts feed
-      - task: Npm@1
-        inputs:
-          command: publish
-          publishRegistry: useFeed
-          publishFeed: "27ba9157-71a6-45a5-812c-832fd887b0e8/4f315247-bf0c-4226-9ee8-b290d88016ad"
-
       - task: CacheBeta@1
         inputs:
           key: npm | $(Agent.OS) | package-lock.json
@@ -76,3 +69,9 @@ jobs:
       #publish artifacts
       - task: PublishBuildArtifacts@1
         displayName: "Publish Artifact: drop"
+
+      #publish to an Azure Artifacts feed
+      - script: |
+          npm init
+          npm publish
+        displayName: "Push package to feed"
