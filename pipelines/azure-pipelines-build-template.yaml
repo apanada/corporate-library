@@ -71,7 +71,10 @@ jobs:
         displayName: "Publish Artifact: drop"
 
       #publish to an Azure Artifacts feed
-      - script: |
-          npm init
-          npm publish
+      - task: Npm@1
         displayName: "Push package to feed"
+        inputs:
+          command: "publish"
+          verbose: true
+          publishRegistry: "useFeed"
+          publishFeed: "27ba9157-71a6-45a5-812c-832fd887b0e8/e09943a6-576a-4cd1-aec0-d25dcf74797b"
